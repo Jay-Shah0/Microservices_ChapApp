@@ -3,23 +3,36 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
-	"os"
 
-	"github.com/segmentio/kafka-go"
 	"github.com/joho/godotenv"
+	"github.com/segmentio/kafka-go"
 )
 
-var kafkaProducer *kafka.Writer
+func initKafkaProducer(ctx context.Context, brokers string) (*kafka.Writer, error) {
+	brokerList := strings.Split(brokers, ",")
+	if len(brokerList) == 0 || brokerList[0] == "" {
+		return nil, fmt.Errorf("KAFKA_BROKERS is not set or is empty")
+	}
 
-func initKafkaProducer(brokers string) {
-	kafkaProducer = kafka.NewWriter(kafka.WriterConfig{
-		Brokers: strings.Split(brokers, ","),
-		// Topic is set per-message, but you could set a default here
+	// 1. Health Check: Attempt to connect to the first broker.
+	// This will fail if Kafka is not reachable.
+	conn, err := kafka.DialContext(ctx, "tcp", brokerList[0])
+	if err != nil {
+		return nil, err
+	}
+	conn.Close() 
+	log.Println("Successfully connected to Kafka.")
+
+	producer := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:  brokerList,
 		Balancer: &kafka.LeastBytes{},
-		Async:    true, // Make the writer asynchronous
+		Async:    true,
 	})
+
+	return producer, nil
 }
 
 type KafkaMessage struct {
@@ -28,7 +41,8 @@ type KafkaMessage struct {
 	Data       interface{}   `json:"data"`
 }
 
-func produceToKafka(ctx context.Context, eventName string, recipients []string, data interface{}) {
+func produceToKafka(ctx context.Context, producer *kafka.Writer, topic string, eventName string, recipients []string, data interface{}) {
+
 	// Serialize message
 	msg := KafkaMessage{
 		Event:      eventName,
@@ -48,8 +62,8 @@ func produceToKafka(ctx context.Context, eventName string, recipients []string, 
 	}
 
 	// Send to Kafka
-	err = kafkaProducer.WriteMessages(ctx, kafka.Message{
-		Topic: os.Getenv("KAFKA_TOPIC"),
+	err = producer.WriteMessages(ctx, kafka.Message{
+		Topic: topic,
 		Value: payload,
 	})
 	if err != nil {

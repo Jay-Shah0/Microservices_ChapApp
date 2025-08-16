@@ -15,7 +15,7 @@ import Login from "../components/Authentication/Login";
 import Signup from "../components/Authentication/Signup";
 
 const API_URL = process.env.HTTP_SERVER_URL;
-const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+const AUTH_URL = process.env.AUTH_SERVER_URL;
 
 
 function Homepage() {
@@ -26,7 +26,7 @@ function Homepage() {
     const checkUserSession = async () => {
       try {
         await axios.post(
-          `${AUTH_SERVER_URL}/auth/refresh`,
+          `${AUTH_URL}/refresh`,
           {}, // Empty body
           { withCredentials: true } // ESSENTIAL for sending cookies
         );

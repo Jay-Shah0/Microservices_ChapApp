@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 )
@@ -14,16 +16,26 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	ctx := context.Background()
 	
 	// 1) Kafka producer
-	initKafkaProducer(os.Getenv("KAFKA_ADDRS"))
+	kafkaProducer, err := initKafkaProducer(ctx, os.Getenv("KAFKA_BROKERS"))
+	if err != nil {
+		log.Fatalf("Failed to connect to Kafka: %v", err)
+	}
 
 	// 2) Redis client + subscriber
-	initRedis(os.Getenv("REDIS_ADDR"))
-	go subscribeRedisAndBroadcast(os.Getenv("SERVER_CHANNEL"))
+	redisClient, err := initRedis(ctx, os.Getenv("REDIS_ADDR"))
+    if err != nil {
+        log.Fatalf("Failed to connect to Redis: %v", err)
+    }
 
-	// 3) Socket.IO server
-	srv, err := initSocketServer()
+	userSockets := &sync.Map{}
+
+	go subscribeRedisAndBroadcast(ctx, redisClient, os.Getenv("SERVER_CHANNEL"), userSockets)
+
+	srv, err := initSocketServer(redisClient, kafkaProducer, os.Getenv("KAFKA_TOPIC"), os.Getenv("SERVER_CHANNEL"), userSockets)
 	if err != nil {
 		log.Fatal(err)
 	}

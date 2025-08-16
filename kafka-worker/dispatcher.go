@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"log"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type GroupedEvent struct {
@@ -12,31 +14,35 @@ type GroupedEvent struct {
 }
 
 
-func dispatchEvent(km *KafkaMessage) {
+func dispatchEvent(km *KafkaMessage, redisClient *redis.Client) {
 	serverGroups := make(map[string][]string)
 
 	for _, userID := range km.Recipients {
-		server := getUserServer(userID)
-		if server == "" {
+		serverChannel, err := getUserServerChannel(userID, redisClient)
+		if err != nil {
+			log.Printf("Error getting server for user %s: %v", userID, err)
 			continue
 		}
-		serverGroups[server] = append(serverGroups[server], userID)
+		if serverChannel == "" {
+			continue // Skip if no server is found for the user
+		}
+
+		serverGroups[serverChannel] = append(serverGroups[serverChannel], userID)
 	}
 
-	for server, users := range serverGroups {
+	for serverChannel, users := range serverGroups {
 		grouped := GroupedEvent{
 			Type:       km.Type,
 			Data:       km.Data,
 			Recipients: users,
 		}
 		payload, _ := json.Marshal(grouped)
-		publishToServerChannel(server, payload)
+		publishToServerChannel(serverChannel, payload, redisClient)
 	}
 }
 
-func publishToServerChannel(server string, payload []byte) {
-	channel := "server:" + server
-	if err := redisClient.Publish(ctx, channel, payload).Err(); err != nil {
-		log.Printf("Failed to publish to %s: %v", channel, err)
+func publishToServerChannel(serverChannel string, payload []byte, redisClient *redis.Client) {
+	if err := redisClient.Publish(ctx, serverChannel, payload).Err(); err != nil {
+		log.Printf("Failed to publish to %s: %v", serverChannel, err)
 	}
 }

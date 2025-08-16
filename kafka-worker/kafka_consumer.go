@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -16,7 +17,7 @@ type KafkaMessage struct {
 	Recipients []string               `json:"recipients"`
 }
 
-func startKafkaConsumer(brokers string) {
+func startKafkaConsumer(brokers string, Redisclient *redis.Client) {
 
     r := kafka.NewReader(kafka.ReaderConfig{
         Brokers:        strings.Split(brokers, ","),
@@ -45,6 +46,6 @@ func startKafkaConsumer(brokers string) {
         }
 
         log.Printf("Received message for recipients: %v", msg.Recipients)
-        dispatchEvent(&msg) 
+        dispatchEvent(&msg, Redisclient)
     }
 }

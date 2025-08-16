@@ -2,23 +2,29 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/redis/go-redis/v9"
 )
 
-var redisClient *redis.Client
 var ctx = context.Background()
 
-func initRedis(addr string) {
-	redisClient = redis.NewClient(&redis.Options{Addr: addr})
+func initRedis(addr string) (client *redis.Client) {
+	client = redis.NewClient(&redis.Options{Addr: addr})
+	return client
 }
 
-func getUserServer(userID string) string {
-	server, err := redisClient.HGet(ctx, "user:server", userID).Result()
-	if err != nil {
-		log.Printf("User %s server not found or error: %v", userID, err)
-		return ""
+func getUserServerChannel(userID string, redisClient *redis.Client) (string, error) {
+	serverChannel, err := redisClient.HGet(ctx, "user:server", userID).Result()
+	if err == redis.Nil {
+		// This means the user was not found in the hash. It's not a connection error.
+		log.Printf("User %s does not have a server channel set.", userID)
+		return "", fmt.Errorf("user %s not found", userID)
+	} else if err != nil {
+		// This handles other errors, like a connection problem.
+		log.Printf("Failed to get user channel from Redis: %v", err)
+		return "", err
 	}
-	return server
+	return serverChannel, nil
 }

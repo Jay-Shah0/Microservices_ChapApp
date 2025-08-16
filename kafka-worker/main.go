@@ -12,7 +12,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	
-	initRedis(os.Getenv("REDIS_ADDR"))
-	startKafkaConsumer(os.Getenv("KAFKA_BROKERS"))
+
+	redisClient := initRedis(os.Getenv("REDIS_ADDR"))
+	startKafkaConsumer(os.Getenv("KAFKA_BROKERS"), redisClient)
 }

@@ -9,7 +9,7 @@ import axios from "axios";
 import { useState } from "react";
 import { useHistory } from "react-router";
 
-const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+const AUTH_URL = process.env.AUTH_SERVER_URL;
 
 const Signup = () => {
   const [show, setShow] = useState(false);
@@ -52,7 +52,7 @@ const Signup = () => {
         withCredentials: true,
       };
       const { data } = await axios.post(
-        `${AUTH_SERVER_URL}/auth/register`,
+        `${AUTH_URL}/register`,
         { email, password },
         config
       );

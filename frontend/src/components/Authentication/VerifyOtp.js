@@ -9,7 +9,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router";
 
-const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+const AUTH_URL = process.env.AUTH_SERVER_URL;
 
 const VerifyOtp = () => {
   const toast = useToast();
@@ -55,7 +55,7 @@ const VerifyOtp = () => {
         withCredentials: true,
       };
       await axios.post(
-        `${AUTH_SERVER_URL}/auth/verify-otp`,
+        `${AUTH_URL}/verify-otp`,
         { email, otp },
         config
       );

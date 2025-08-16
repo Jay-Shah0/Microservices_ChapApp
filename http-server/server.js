@@ -25,13 +25,13 @@ connectDB();
 
 app.use(express.json());
 
-app.get("/", (req,res)=> {
-  res.send("API is running");
+app.get("/api", (req,res)=> {
+  res.send("API is running successfully");
 });
 
-app.use('/user',UserRoutes);
-app.use('/chats',ChatRoutes);
-app.use('/message',MessageRoutes);
+app.use('/api/user', UserRoutes);
+app.use('/api/chats', ChatRoutes);
+app.use('/api/message', MessageRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

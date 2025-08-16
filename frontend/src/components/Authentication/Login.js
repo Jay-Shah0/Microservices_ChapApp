@@ -8,7 +8,7 @@ import { useToast } from "@chakra-ui/react";
 import { useHistory } from "react-router-dom";
 
 const API_URL = process.env.HTTP_SERVER_URL;
-const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+const AUTH_URL = process.env.AUTH_SERVER_URL;
 
 const Login = () => {
   const [show, setShow] = useState(false);
@@ -44,12 +44,12 @@ const Login = () => {
 
       // 1. First, call the login endpoint. This will set the HttpOnly cookies.
       await axios.post(
-        `${AUTH_SERVER_URL}/auth/login`,
+        `${AUTH_URL}/login`,
         { email, password },
         config
       );
 
-      const { data } = await axios.get(`${API_URL}/user/profil`, config);
+      const { data } = await axios.get(`${API_URL}/user/profile`, config);
 
       toast({
         title: "Login Successful",

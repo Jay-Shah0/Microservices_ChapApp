@@ -2,50 +2,42 @@ package main
 
 import (
 	"context"
-	"errors" 
+	"errors"
 	"log"
-	"os"
 	"sync"
 
 	socketio "github.com/googollee/go-socket.io"
+	"github.com/redis/go-redis/v9"
+	"github.com/segmentio/kafka-go"
 )
 
-var userSockets sync.Map
 
-// redisClient and produceToKafka are assumed to be defined elsewhere in your package
-// var redisClient *redis.Client 
-// func produceToKafka(...) 
-
-func initSocketServer() (*socketio.Server, error) {
+func initSocketServer(redisClient *redis.Client, kafkaProducer *kafka.Writer, topic string, serverChannel string, userSockets *sync.Map) (*socketio.Server, error) {
 	srv := socketio.NewServer(nil)
 
-	// CHANGED: OnConnect now handles user identification securely
 	srv.OnConnect("/", func(so socketio.Conn) error {
-		// 1. Read the TRUSTED header passed by the Nginx gateway
 		userID := so.RemoteHeader().Get("X-User-Id")
 
-		// 2. If the header is missing, the connection is unauthorized. Reject it.
 		if userID == "" {
 			log.Println("Rejecting connection: Missing or empty X-User-Id header.")
-			return errors.New("unauthorized") // This closes the connection
+			return errors.New("unauthorized") 
 		}
 
-		// 3. The user is authenticated. Associate the ID with the connection.
 		so.SetContext(userID)
 		userSockets.Store(userID, so)
 
-		// 4. Register the user's server location in Redis
+		//Register the user's server location in Redis
 		err := redisClient.HSet(
 			context.Background(),
 			"user:server",
 			userID,
-			os.Getenv("SERVER_CHANNEL"),
+			serverChannel,
 		).Err()
 		if err != nil {
 			log.Println("Redis HSet error:", err)
 		}
 
-		log.Printf("User %s connected and registered on server %s", userID, os.Getenv("SERVER_CHANNEL"))
+		log.Printf("User %s connected and registered on server %s", userID, serverChannel)
 		so.Emit("connected") // Let the client know it's ready
 		return nil
 	})
@@ -86,8 +78,8 @@ func initSocketServer() (*socketio.Server, error) {
 					log.Println("Missing data field")
 					return
 				}
-				
-				produceToKafka(context.Background(), eventName, recipients, dataPayload)
+
+				produceToKafka(context.Background(), kafkaProducer, topic, eventName, recipients, dataPayload)
 			}
 		}(event))
 	}

@@ -30,7 +30,7 @@ import UserListItem from "../userAvatar/UserListItem";
 import { ChatState } from "../../Context/ChatProvider";
 
 const API_URL = process.env.HTTP_SERVER_URL;
-const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+const AUTH_URL = process.env.AUTH_SERVER_URL;
 
 function SideDrawer() {
   const [search, setSearch] = useState("");
@@ -52,7 +52,7 @@ function SideDrawer() {
   const logoutHandler = async () => {
   try {
     await axios.post(
-      `http://${AUTH_SERVER_URL}/auth/logout`,
+      `http://${AUTH_URL}/logout`,
       {}, // Empty body
       { withCredentials: true } 
     );
