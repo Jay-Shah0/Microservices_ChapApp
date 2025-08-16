@@ -2,8 +2,9 @@ const expressAsyncHandler = require("express-async-handler");
 const Chat = require("../Model/ChatModel");
 const User = require("../Model/UserModel");
 
-const AccessChat = expressAsyncHandler( async (req, res) => {
-    const { userId } = req.body;
+const AccessChat = expressAsyncHandler(async (req, res) => {
+  const { userId } = req.body; // The other user's ID
+  const loggedInUserId = req.headers["x-user-id"];
 
   if (!userId) {
     console.log("UserId param not sent with request");
@@ -13,7 +14,7 @@ const AccessChat = expressAsyncHandler( async (req, res) => {
   var isChat = await Chat.find({
     isGroupChat: false,
     $and: [
-      { users: { $elemMatch: { $eq: req.user._id } } },
+      { users: { $elemMatch: { $eq: loggedInUserId } } },
       { users: { $elemMatch: { $eq: userId } } },
     ],
   })
@@ -31,7 +32,7 @@ const AccessChat = expressAsyncHandler( async (req, res) => {
     var chatData = {
       chatName: "Private Chat",
       isGroupChat: false,
-      users: [req.user._id, userId],
+      users: [loggedInUserId, userId],
     };
 
     try {
@@ -49,8 +50,9 @@ const AccessChat = expressAsyncHandler( async (req, res) => {
 });
 
 const FetchChats = expressAsyncHandler(async (req, res) => {
+  const loggedInUserId = req.headers["x-user-id"];
   try {
-    Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
+    Chat.find({ users: { $elemMatch: { $eq: loggedInUserId } } })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
       .populate("latestMessage")
@@ -68,13 +70,14 @@ const FetchChats = expressAsyncHandler(async (req, res) => {
   }
 });
 
-const CreateGroupChat = expressAsyncHandler(async (req,res) => {
-
-   if (!req.body.users || !req.body.name) {
-    return res.status(400).send({ message: "Please Fill all the feilds" });
+const CreateGroupChat = expressAsyncHandler(async (req, res) => {
+  if (!req.body.users || !req.body.name) {
+    return res.status(400).send({ message: "Please Fill all the fields" });
   }
 
   var users = JSON.parse(req.body.users);
+  const loggedInUserId = req.headers["x-user-id"];
+  users.push(loggedInUserId); // Add the creator to the user list
 
   if (users.length < 3) {
     return res
@@ -87,7 +90,7 @@ const CreateGroupChat = expressAsyncHandler(async (req,res) => {
       chatName: req.body.name,
       users: users,
       isGroupChat: true,
-      groupAdmin: req.user,
+      groupAdmin: loggedInUserId,
     });
 
     const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
@@ -101,17 +104,13 @@ const CreateGroupChat = expressAsyncHandler(async (req,res) => {
   }
 });
 
-const RenameGroupChat = expressAsyncHandler(async (req,res) => {
+const RenameGroupChat = expressAsyncHandler(async (req, res) => {
   const { chatId, chatName } = req.body;
 
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
-    {
-      chatName: chatName,
-    },
-    {
-      new: true,
-    }
+    { chatName: chatName },
+    { new: true }
   )
     .populate("users", "-password")
     .populate("groupAdmin", "-password");
@@ -126,19 +125,18 @@ const RenameGroupChat = expressAsyncHandler(async (req,res) => {
 
 const AddToGroup = expressAsyncHandler(async (req, res) => {
   const { chatId, userId } = req.body;
+  const loggedInUserId = req.headers["x-user-id"];
 
-  const admincheack = await Chat.findOne({ chatId }).match
-
-
+  const chat = await Chat.findById(chatId);
+  if (chat.groupAdmin.toString() !== loggedInUserId) {
+    res.status(403);
+    throw new Error("Only the group admin can add users.");
+  }
 
   const added = await Chat.findByIdAndUpdate(
     chatId,
-    {
-      $push: { users: userId },
-    },
-    {
-      new: true,
-    }
+    { $push: { users: userId } },
+    { new: true }
   )
     .populate("users", "-password")
     .populate("groupAdmin", "-password");
@@ -153,17 +151,18 @@ const AddToGroup = expressAsyncHandler(async (req, res) => {
 
 const RemovefromGroup = expressAsyncHandler(async (req, res) => {
   const { chatId, userId } = req.body;
-
-  // check if the requester is admin
+  const loggedInUserId = req.headers["x-user-id"];
+  
+  const chat = await Chat.findById(chatId);
+  if (chat.groupAdmin.toString() !== loggedInUserId && userId !== loggedInUserId) {
+    res.status(403);
+    throw new Error("Only the group admin can remove users.");
+  }
 
   const removed = await Chat.findByIdAndUpdate(
     chatId,
-    {
-      $pull: { users: userId },
-    },
-    {
-      new: true,
-    }
+    { $pull: { users: userId } },
+    { new: true }
   )
     .populate("users", "-password")
     .populate("groupAdmin", "-password");
@@ -176,6 +175,11 @@ const RemovefromGroup = expressAsyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { AccessChat,FetchChats,CreateGroupChat,RenameGroupChat,AddToGroup,RemovefromGroup };
-
-
+module.exports = {
+  AccessChat,
+  FetchChats,
+  CreateGroupChat,
+  RenameGroupChat,
+  AddToGroup,
+  RemovefromGroup,
+};

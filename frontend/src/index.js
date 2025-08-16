@@ -13,9 +13,7 @@ const root = createRoot(container);
 root.render(
 	<ChakraProvider>
 		<BrowserRouter>
-			<ChatProvider>
-				<App />
-			</ChatProvider>
+			<App />
 		</BrowserRouter>
 	</ChakraProvider>
 );

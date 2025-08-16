@@ -15,16 +15,38 @@ const Chatbar = ({ loggedUser, chat }) => {
 	};
 
 	useEffect(() => {
-		socket.on("message recieved", (newMessageReceived) => {
+		const handleNewMessage = (newMessageReceived) => {
 			if (chat._id === newMessageReceived.chat._id && SelectedChat !== chat) {
 				setNewMessageCounts((prevCount) => prevCount + 1);
 				setLatestMessage(newMessageReceived);
 			}
-		});
+		};
+		socket.on("message recieved", handleNewMessage);
 		return () => {
-			socket.off("message recieved");
+			socket.off("message recieved", handleNewMessage);
 		};
 	}, [SelectedChat, chat]);
+
+	useEffect(() => {
+        const handleTyping = ({ chatId }) => {
+            if (chatId === chat._id) {
+                setIsTyping(true);
+            }
+        };
+        const handleStopTyping = ({ chatId }) => {
+            if (chatId === chat._id) {
+                setIsTyping(false);
+            }
+        };
+
+        socket.on('typing', handleTyping);
+        socket.on('stop typing', handleStopTyping);
+
+        return () => {
+            socket.off('typing', handleTyping);
+            socket.off('stop typing', handleStopTyping);
+        };
+    }, [chat._id]);
 
 	return (
 		<Box
@@ -40,7 +62,12 @@ const Chatbar = ({ loggedUser, chat }) => {
 			<Text fontSize="md" mt={2} color="#2D3748" fontWeight="bold">
 				{!chat.isGroupChat ? getSender(loggedUser, chat.users) : chat.chatName}
 			</Text>
-			{latestMessage && (
+			{isTyping ? (
+                <Text fontSize="sm" mt={2} color="green.500" fontStyle="italic">
+                    Typing...
+                </Text>
+            ) : (
+			latestMessage && (
 				<Text
 					fontSize="sm"
 					mt={2}
@@ -55,7 +82,9 @@ const Chatbar = ({ loggedUser, chat }) => {
 					</span>
 					<span>{latestMessage.content}</span>
 				</Text>
+			)
 			)}
+
 			{newMessageCounts > 0 && (
 				<div
 					style={{

@@ -8,14 +8,6 @@ const ChatProvider = ({ children }) => {
   const [User, setUser] = useState();
   const [Chats, setChats] = useState();
 
-  const history = useHistory();
-
-  useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("UserInfo"));
-    setUser(userInfo);
-    if (!userInfo) history.push("/");
-  }, [history]);
-
   return (
     <ChatContext.Provider
       value={{

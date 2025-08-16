@@ -1,92 +1,90 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../Model/UserModel");
-const GenerateToken = require("../Config/GenerateToken");
 const expressAsyncHandler = require("express-async-handler");
+const pool = require("../Config/pgDB");
 
-// Regular expression for email validation
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const registerUserProfile = asyncHandler(async (req, res) => {
+  // This function remains unchanged as it creates the user.
+  const { name, email, pic } = req.body;
 
-const RegisterUser = asyncHandler(async (req, res) => {
-	const { name, email, password, pic } = req.body;
+  if (!name || !email) {
+    res.status(400);
+    throw new Error("Please provide name and email");
+  }
 
-	if (!name || !email || !password) {
-		res.status(400);
-		throw new Error("Please Enter all the Fields");
-	}
+  const user = await User.create({
+    name,
+    email,
+    pic,
+  });
+  if (user) {
+    const mongoId = user._id;
 
-	// Check if email is valid
-	if (!emailRegex.test(email)) {
-		res.status(400);
-		throw new Error("Invalid Email Address");
-	}
+    const updateQuery = `
+      UPDATE users 
+      SET moongo_id = $1 
+      WHERE email = $2;
+    `;
+    await pool.query(updateQuery, [mongoId, email]);
 
-	const UserExist = await User.findOne({ email });
-
-	if (UserExist) {
-		res.status(400);
-		throw new Error("User already exists");
-	}
-
-	const user = await User.create({
-		name,
-		email,
-		password,
-		pic,
-	});
-
-	if (user) {
-		res.status(200).json({
-			_id: user._id,
-			name: user.name,
-			email: user.email,
-			pic: user.pic,
-			token: GenerateToken(user._id),
-		});
-	} else {
-		res.status(400);
-		throw new Error("Failed to create new user");
-	}
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      pic: user.pic,
+    });
+  } else {
+    res.status(400);
+    throw new Error("Failed to create the user profile");
+  }
 });
 
-const AuthUser = asyncHandler(async (req, res) => {
-	const { email, password } = req.body;
+const getUserProfile = asyncHandler(async (req, res) => {
+  // This function already uses the correct header name.
+  const userId = req.headers["x-user-id"];
 
-	// Check if email is valid
-	if (!emailRegex.test(email)) {
-		res.status(400);
-		throw new Error("Invalid Email Address");
-	}
+  if (!userId) {
+    res.status(400);
+    throw new Error(
+      "User ID not found in headers. Authorization may have failed."
+    );
+  }
 
-	const user = await User.findOne({ email });
+  const user = await User.findById(userId).select("-password");
 
-	if (user && (await user.matchPassword(password))) {
-		res.json({
-			_id: user._id,
-			name: user.name,
-			email: user.email,
-			pic: user.pic,
-			token: GenerateToken(user._id),
-		});
-	} else {
-		res.status(400);
-		throw new Error("Invalid Email or Password");
-	}
+  if (user) {
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      pic: user.pic,
+    });
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
 });
 
 const SearchUser = expressAsyncHandler(async (req, res) => {
-	const searchQuery = req.query.search;
-	const userQuery = searchQuery
-		? {
-				$or: [
-					{ name: { $regex: searchQuery, $options: "i" } },
-					{ email: { $regex: searchQuery, $options: "i" } },
-				],
-		  }
-		: {};
+  // CORRECTED: Using 'x-user-id' for consistency.
+  const loggedInUserId = req.headers["x-user-id"];
+  const searchQuery = req.query.search;
+  
+  const userQuery = searchQuery
+    ? {
+        $or: [
+          { name: { $regex: searchQuery, $options: "i" } },
+          { email: { $regex: searchQuery, $options: "i" } },
+        ],
+      }
+    : {};
 
-	const users = await User.find(userQuery);
-	res.send(users);
+  // Find users that match the query AND are not the logged-in user.
+  const users = await User.find(userQuery)
+    .find({ _id: { $ne: loggedInUserId } })
+    .select("_id name email pic");
+    
+  res.send(users);
 });
 
-
-module.exports = { RegisterUser, AuthUser, SearchUser };
+module.exports = { registerUserProfile, getUserProfile, SearchUser };

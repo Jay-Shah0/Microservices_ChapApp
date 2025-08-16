@@ -29,6 +29,9 @@ import ProfileModal from "./ProfileModal";
 import UserListItem from "../userAvatar/UserListItem";
 import { ChatState } from "../../Context/ChatProvider";
 
+const API_URL = process.env.HTTP_SERVER_URL;
+const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+
 function SideDrawer() {
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
@@ -45,10 +48,21 @@ function SideDrawer() {
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const history = useHistory();
-  const logoutHandler = () => {
+  
+  const logoutHandler = async () => {
+  try {
+    await axios.post(
+      `http://${AUTH_SERVER_URL}/auth/logout`,
+      {}, // Empty body
+      { withCredentials: true } 
+    );
+  } catch (error) {
+    console.error("Logout failed on server:", error);
+  } finally {
     localStorage.removeItem("UserInfo");
     history.push("/");
-  };
+  }
+};
 
   const handleSearch = async () => {
     if (!search) {
@@ -66,12 +80,10 @@ function SideDrawer() {
       setLoading(true);
 
       const config = {
-        headers: {
-          Authorization: `Bearer ${User.token}`,
-        },
+        withCredentials: true,
       };
 
-      const { data } = await axios.get(`http://localhost:5000/user?search=${search}`, config);
+      const { data } = await axios.get(`${API_URL}/user?search=${search}`, config);
 
       setLoading(false);
       setSearchResult(data);
@@ -93,12 +105,9 @@ function SideDrawer() {
     try {
       setLoadingChat(true);
       const config = {
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Bearer ${User.token}`,
-        },
+        withCredentials: true,
       };
-      const { data } = await axios.post(`http://localhost:5000/chats`, { userId }, config);
+      const { data } = await axios.post(`${API_URL}/chats`, { userId }, config);
 
       if (!Chats.find((c) => c._id === data._id)) setChats([data, ...Chats]);
       setSelectedChat(data);

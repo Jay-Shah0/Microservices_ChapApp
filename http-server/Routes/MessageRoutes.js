@@ -4,12 +4,12 @@ const {
   sendMessage,
   messageRead,
 } = require("../Controllers/MessageControllers.js");
-const { protect } = require("../middleware/AuthMiddleware.js");
+const { mapPostgresIdToMongoId } = require("../middleware/mapIdMiddleware");
 
 const Router = express.Router();
 
-Router.route("/:chatId").get(protect, allMessages);
-Router.route("/readressage").put(protect, messageRead);
-Router.route("/").post(protect, sendMessage);
+Router.route("/:chatId").get(mapPostgresIdToMongoId, allMessages);
+Router.route("/readressage").put(mapPostgresIdToMongoId, messageRead);
+Router.route("/").post(mapPostgresIdToMongoId, sendMessage);
 
 module.exports = Router;

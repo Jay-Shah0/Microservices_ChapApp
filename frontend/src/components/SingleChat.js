@@ -20,6 +20,8 @@ import ScrollableChat from './MessagesScroll';
 import axios from 'axios';
 import { useCallback } from 'react';
 
+const API_URL = process.env.HTTP_SERVER_URL;
+
 const SingleChat = ({ fetchAgain, setfetchAgain }) => {
   const { SelectedChat, setSelectedChat, User } = ChatState();
 
@@ -40,15 +42,13 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
 
 		try {
 			const config = {
-				headers: {
-					"Content-type": "application/json",
-					Authorization: `Bearer ${User.token}`,
-				},
+				
+        withCredentials: true,
 			};
 			await axios.put(
-				"http://localhost:5000/message/readressage",
+				`${API_URL}/message/readressage`,
 				{ chatId: SelectedChat },
-				config
+				config  
 			);
 		} catch (error) {
 			toast({
@@ -60,17 +60,20 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
 				position: "bottom",
 			});
 		}
-	}, [SelectedChat, User.token, toast]);
+	}, [SelectedChat]);
   
 
   const FetchMessages = useCallback(async () => {
 		if (!SelectedChat) return;
 
 		try {
-			const config = { headers: { Authorization: `Bearer ${User.token}` } };
+			const config = {
+        headers: { "Content-type": "application/json" },
+        withCredentials: true,
+      };
 			setloading(true);
 			const { data } = await axios.get(
-				`http://localhost:5000/message/${SelectedChat._id}`,
+				`${API_URL}/message/${SelectedChat._id}`,
 				config
 			);
 			setMessages(data);
@@ -87,27 +90,31 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
 		}
 
 		StatusUpdate();
-	}, [SelectedChat, User.token, StatusUpdate, toast]);
+	}, [SelectedChat, StatusUpdate]);
   
 
   const SendMessage = async () => {
     try {
       setTyping(false);
-      socket.emit('stop typing', SelectedChat._id);
+      const recipients = data.chat.users
+        .map(u => u._id)
+        .filter(id => id !== data.sender._id);
+      socket.emit('stop typing', {data: { chatId: SelectedChat._id },recipients});
       const config = {
         headers: {
           'Content-type': 'application/json',
-          Authorization: `Bearer ${User.token}`,
+          withCredentials: true,
         },
       };
       const { data } = await axios.post(
-        'http://localhost:5000/message',
+        '${API_URL}/message',
         { content: NewMessage, chatId: SelectedChat },
         config
       );
       setNewMessage('');
       setMessages([...Messages, data]);
-      socket.emit('new message', data);
+      
+      socket.emit('new message', {data,recipients});
       textareaRef.current?.focus();
     } catch (error) {
       toast({
@@ -140,48 +147,63 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
     if (!SocketConnected) return;
     setNewMessage(message);
     setTyping(true);
-    socket.emit('typing', SelectedChat._id);
+    const recipients = SelectedChat.users
+      .map(u => u._id)
+      .filter(id => id !== currentUserId);
+
+    socket.emit('typing', {data: { chatId: SelectedChat._id },recipients});
     const lastTypingTime = new Date().getTime();
     const timerLength = 3000;
     setTimeout(() => {
       const timeNow = new Date().getTime();
       const timeDiff = timeNow - lastTypingTime;
       if (timeDiff >= timerLength && Typing) {
-        socket.emit('stop typing', SelectedChat._id);
+        socket.emit('stop typing', {data: { chatId: SelectedChat._id },recipients});
         setTyping(false);
       }
     }, timerLength);
   };
 
   useEffect(() => {
-    socket.emit('setup', User);
     socket.on('connected', () => setSocketConnected(true));
-    socket.on('typing', () => setIstyping(true));
-    socket.on('stop typing', () => setIstyping(false));
     return () => {
       socket.off('connected');
     };
   }, [User]);
+  
 
   useEffect(() => {
-    FetchMessages();
-    if (SelectedChat && SelectedChat._id !== PreviousChatId) {
-      socket.emit('join chat', SelectedChat._id);
-    }
-    if (PreviousChatId) socket.emit('leave chat', PreviousChatId);
-
-    setPreviousChatId(SelectedChat?._id || "");
-    return () => {
-      if (SelectedChat) socket.emit('leave chat', SelectedChat._id);
+    const handleMessage = (newMessageRecieved) => {
+        if (!SelectedChat || SelectedChat._id !== newMessageRecieved.chat._id) return;
+        setMessages([...Messages, newMessageRecieved]);
     };
-  }, [FetchMessages, PreviousChatId, SelectedChat]);
+
+    socket.on('message recieved', handleMessage);
+
+    return () => {
+        socket.off('message recieved', handleMessage);
+    };
+  }, [Messages, SelectedChat]); 
 
   useEffect(() => {
-    socket.on('message recieved', (newMessageRecieved) => {
-      if (!SelectedChat || SelectedChat._id !== newMessageRecieved.chat._id) return;
-      setMessages([...Messages, newMessageRecieved]);
-    });
-  }, [Messages, SelectedChat, StatusUpdate]);
+    const handleTyping = ({ chatId }) => {
+        if (chatId === SelectedChat?._id) {
+            setIstyping(true);
+        }
+    };
+    const handleStopTyping = ({ chatId }) => {
+      if (chatId === SelectedChat?._id) {
+          setIstyping(false);
+      }
+    };
+      socket.on('typing', handleTyping);
+      socket.on('stop typing', handleStopTyping);
+
+      return () => {
+          socket.off('typing', handleTyping);
+          socket.off('stop typing', handleStopTyping);
+      };
+  }, [SelectedChat]); // This effect re-runs whenever the selected chat changes
 
   return (
     <>

@@ -2,6 +2,8 @@ import "./App.css";
 import Homepage from "./Pages/Homepage";
 import { Route } from "react-router-dom";
 import Chatpage from "./Pages/Chatpage";
+import VerifyOtp from "./components/Authentication/VerifyOtp";
+import CompleteProfile from "./components/Authentication/CompleteProfile";
 
 
 function App() {
@@ -9,7 +11,11 @@ function App() {
   return (
     <div className="App">
       <Route path="/" component={Homepage} exact />
-      <Route path="/chats" component={Chatpage} />
+      <Route path="/verify" component={VerifyOtp} />
+      <Route path="/register" component={CompleteProfile} />
+      <ChatProvider>
+        <Route path="/chats" component={Chatpage} />
+      </ChatProvider>
     </div>
   );
 }

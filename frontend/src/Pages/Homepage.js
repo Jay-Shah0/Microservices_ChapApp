@@ -8,28 +8,50 @@ import {
   Tabs,
   Text,
 } from "@chakra-ui/react";
-import { useEffect } from "react";
 import { useHistory } from "react-router";
+import { useEffect } from "react"; 
+import axios from "axios";
 import Login from "../components/Authentication/Login";
 import Signup from "../components/Authentication/Signup";
-import { ChatState } from "../Context/ChatProvider";
+
+const API_URL = process.env.HTTP_SERVER_URL;
+const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+
 
 function Homepage() {
-  const { setUser } = ChatState();
   const history = useHistory();
 
+  // This useEffect hook runs once when the component loads
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("UserInfo"));
-    if (storedUser) {
-      setUser(storedUser);
-      history.push("/chats");
-    }
-  }, [history, setUser]);
+    const checkUserSession = async () => {
+      try {
+        await axios.post(
+          `${AUTH_SERVER_URL}/auth/refresh`,
+          {}, // Empty body
+          { withCredentials: true } // ESSENTIAL for sending cookies
+        );
+
+        const { data } = await axios.get(
+          `${API_URL}/user/profile`,
+          { withCredentials: true }
+        );
+
+        if (data) {
+          localStorage.setItem("UserInfo", JSON.stringify(data));
+          history.push("/chats");
+        }
+      } catch (error) {
+        console.log("No active session found.");
+      }
+    };
+
+    checkUserSession();
+  }, [history]);
 
   return (
     <Container maxW="xl" centerContent>
       <Box
-      display="flex"
+        display="flex"
         justifyContent="center"
         p={3}
         bg="white"

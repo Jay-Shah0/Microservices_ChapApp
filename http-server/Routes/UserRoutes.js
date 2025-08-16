@@ -1,11 +1,9 @@
 const express = require("express")
-const { RegisterUser, AuthUser,SearchUser } = require("../Controllers/UserControllers");
-const { checkTokenExpiry } = require("../middleware/AuthMiddleware");
+const { registerUserProfile,getUserProfile, SearchUser } = require("../Controllers/UserControllers");
+const { mapPostgresIdToMongoId } = require("../middleware/mapIdMiddleware");
 
 const Router = express.Router()
 
-Router.route("/").post(RegisterUser).get( SearchUser ); 
-Router.route("/login").post(AuthUser);
-Router.route("/auth").get(checkTokenExpiry);
-
+Router.route("/").post(registerUserProfile).get(SearchUser);
+Router.route("/profile").get(mapPostgresIdToMongoId, getUserProfile);
 module.exports = Router;

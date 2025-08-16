@@ -1,3 +1,5 @@
+// src/components/Authentication/Signup.js
+
 import { Button } from "@chakra-ui/button";
 import { FormControl, FormLabel } from "@chakra-ui/form-control";
 import { Input, InputGroup, InputRightElement } from "@chakra-ui/input";
@@ -7,30 +9,30 @@ import axios from "axios";
 import { useState } from "react";
 import { useHistory } from "react-router";
 
+const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
+
 const Signup = () => {
   const [show, setShow] = useState(false);
   const handleClick = () => setShow(!show);
   const toast = useToast();
   const history = useHistory();
 
-  const [name, setName] = useState();
   const [email, setEmail] = useState();
-  const [confirmpassword, setConfirmpassword] = useState();
   const [password, setPassword] = useState();
-  const [pic, setPic] = useState();
-  const [picLoading, setPicLoading] = useState(false);
+  const [confirmpassword, setConfirmpassword] = useState();
+  const [loading, setLoading] = useState(false);
 
   const submitHandler = async () => {
-    setPicLoading(true);
-    if (!name || !email || !password || !confirmpassword) {
+    setLoading(true);
+    if (!email || !password || !confirmpassword) {
       toast({
-        title: "Please Fill all the Feilds",
+        title: "Please Fill all the Fields",
         status: "warning",
         duration: 5000,
         isClosable: true,
         position: "bottom",
       });
-      setPicLoading(false);
+      setLoading(false);
       return;
     }
     if (password !== confirmpassword) {
@@ -41,104 +43,50 @@ const Signup = () => {
         isClosable: true,
         position: "bottom",
       });
+      setLoading(false);
       return;
     }
-    console.log(name, email, password, pic);
     try {
       const config = {
-        headers: {
-          "Content-type": "application/json",
-        },
+        headers: { "Content-type": "application/json" },
+        withCredentials: true,
       };
       const { data } = await axios.post(
-        "http://localhost:5000/user",
-        {
-          name,
-          email,
-          password,
-          pic,
-        },
+        `${AUTH_SERVER_URL}/auth/register`,
+        { email, password },
         config
       );
-      console.log(data);
+
       toast({
-        title: "Registration Successful",
+        title: "Registration Started",
+        description: data.message, // "Please verify your email with the OTP sent"
         status: "success",
         duration: 5000,
         isClosable: true,
         position: "bottom",
       });
-      localStorage.setItem("UserInfo", JSON.stringify(data));
-      setPicLoading(false);
-      history.push("/chats");
+
+      // Store email temporarily to use on the verification page
+      localStorage.setItem("registrationEmail", email);
+
+      setLoading(false);
+      history.push("/verify"); // Navigate to OTP verification page
     } catch (error) {
       toast({
-        title: "Error Occured!",
+        title: "Error Occurred!",
         description: error.response.data.message,
         status: "error",
         duration: 5000,
         isClosable: true,
         position: "bottom",
       });
-      setPicLoading(false);
-    }
-  };
-
-  const postDetails = (pics) => {
-    setPicLoading(true);
-    if (pics === undefined) {
-      toast({
-        title: "Please Select an Image!",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
-      return;
-    }
-    console.log(pics);
-    if (pics.type === "image/jpeg" || pics.type === "image/png") {
-      const data = new FormData();
-      data.append("file", pics);
-      data.append("upload_preset", "chat-app");
-      data.append("cloud_name", "piyushproj");
-      fetch("https://api.cloudinary.com/v1_1/piyushproj/image/upload", {
-        method: "post",
-        body: data,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setPic(data.url.toString());
-          console.log(data.url.toString());
-          setPicLoading(false);
-        })
-        .catch((err) => {
-          console.log(err);
-          setPicLoading(false);
-        });
-    } else {
-      toast({
-        title: "Please Select an Image!",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
-      setPicLoading(false);
-      return;
+      setLoading(false);
     }
   };
 
   return (
     <VStack spacing="5px">
-      <FormControl id="first-name" isRequired>
-        <FormLabel>Name</FormLabel>
-        <Input
-          placeholder="Enter Your Name"
-          onChange={(e) => setName(e.target.value)}
-        />
-      </FormControl>
-      <FormControl id="email" isRequired>
+      <FormControl id="email-signup" isRequired>
         <FormLabel>Email Address</FormLabel>
         <Input
           type="email"
@@ -146,7 +94,7 @@ const Signup = () => {
           onChange={(e) => setEmail(e.target.value)}
         />
       </FormControl>
-      <FormControl id="password" isRequired>
+      <FormControl id="password-signup" isRequired>
         <FormLabel>Password</FormLabel>
         <InputGroup size="md">
           <Input
@@ -161,7 +109,7 @@ const Signup = () => {
           </InputRightElement>
         </InputGroup>
       </FormControl>
-      <FormControl id="password" isRequired>
+      <FormControl id="confirm-password-signup" isRequired>
         <FormLabel>Confirm Password</FormLabel>
         <InputGroup size="md">
           <Input
@@ -176,21 +124,12 @@ const Signup = () => {
           </InputRightElement>
         </InputGroup>
       </FormControl>
-      <FormControl id="pic">
-        <FormLabel>Upload your Picture</FormLabel>
-        <Input
-          type="file"
-          p={1.5}
-          accept="image/*"
-          onChange={(e) => postDetails(e.target.files[0])}
-        />
-      </FormControl>
       <Button
         colorScheme="blue"
         width="100%"
         style={{ marginTop: 15 }}
         onClick={submitHandler}
-        isLoading={picLoading}
+        isLoading={loading}
       >
         Sign Up
       </Button>

@@ -1,16 +1,16 @@
 const express = require("express");
-const { protect } = require("../middleware/AuthMiddleware")
+const { mapPostgresIdToMongoId } = require("../middleware/mapIdMiddleware");
 const { AccessChat, FetchChats, CreateGroupChat, RenameGroupChat, AddToGroup, RemovefromGroup } = require("../Controllers/ChatControllers");
 
 
 const Router = express.Router();
 
-Router.route("/").post(protect , AccessChat);
-Router.route("/").get(protect , FetchChats);
-Router.route("/creategroup").post(protect , CreateGroupChat);
-Router.route("/renamegroup").put(protect , RenameGroupChat);
-Router.route("/addtogroup").put(protect , AddToGroup);
-Router.route("/removefromgroup").put(protect , RemovefromGroup);
+Router.route("/").post(mapPostgresIdToMongoId, AccessChat);
+Router.route("/").get(mapPostgresIdToMongoId , FetchChats);
+Router.route("/creategroup").post(mapPostgresIdToMongoId , CreateGroupChat);
+Router.route("/renamegroup").put(mapPostgresIdToMongoId , RenameGroupChat);
+Router.route("/addtogroup").put(mapPostgresIdToMongoId , AddToGroup);
+Router.route("/removefromgroup").put(mapPostgresIdToMongoId , RemovefromGroup);
 
 module.exports = Router ;
 

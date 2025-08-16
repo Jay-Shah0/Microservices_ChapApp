@@ -10,6 +10,8 @@ import { ChatState } from "../Context/ChatProvider";
 import Chatbar from "./Chatbar";
 import { useCallback } from "react";
 
+const API_URL = process.env.HTTP_SERVER_URL;
+
 const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState();
 
@@ -20,11 +22,9 @@ const MyChats = ({ fetchAgain }) => {
   const fetchChats = useCallback(async () => {
 		try {
 			const config = {
-				headers: {
-					Authorization: `Bearer ${User.token}`,
-				},
+				withCredentials: true,
 			};
-			const { data } = await axios.get("http://localhost:5000/chats", config);
+			const { data } = await axios.get(`${API_URL}/chats`, config);
 			setChats(data);
 		} catch (error) {
 			toast({
@@ -37,7 +37,7 @@ const MyChats = ({ fetchAgain }) => {
 			});
 			console.log(error);
 		}
-	}, [User.token, setChats, toast]);
+	}, [setChats, toast]);
 
 
   useEffect(() => {

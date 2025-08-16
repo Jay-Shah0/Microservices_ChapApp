@@ -15,6 +15,8 @@ import UserBadgeItem from "../userAvatar/UserBadgeItemInGroup";
 import UserListItem from "../userAvatar/UserListItem";
 import { SettingsIcon } from "@chakra-ui/icons";
 
+const API_URL = process.env.HTTP_SERVER_URL;
+
 
 const UpdateGroupChatModal = ({ fetchAgain, setfetchAgain }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -35,11 +37,9 @@ const UpdateGroupChatModal = ({ fetchAgain, setfetchAgain }) => {
     try {
       setLoading(true);
       const config = {
-        headers: {
-          Authorization: `Bearer ${User.token}`,
-        },
+        withCredentials: true,
       };
-      const { data } = await axios.get(`http://localhost:5000/user?search=${search}`, config);
+      const { data } = await axios.get(`${API_URL}/user?search=${search}`, config);
       setLoading(false);
       setSearchResult(data);
     } catch (error) {
@@ -62,11 +62,12 @@ const UpdateGroupChatModal = ({ fetchAgain, setfetchAgain }) => {
       setRenameLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${User.token}`,
-        },
+					"Content-type": "application/json",
+				},
+        withCredentials: true,
       };
       const { data } = await axios.put(
-        `http://localhost:5000/chats/renamegroup`,
+        `${API_URL}/chats/renamegroup`,
         {
           chatId: SelectedChat._id,
           chatName: groupChatName,
@@ -122,11 +123,12 @@ const UpdateGroupChatModal = ({ fetchAgain, setfetchAgain }) => {
       setLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${User.token}`,
-        },
+					"Content-type": "application/json",
+				},
+        withCredentials: true,
       };
       const { data } = await axios.put(
-        `http://localhost:5000/chats/addtogroup`,
+        `${API_URL}/chats/addtogroup`,
         {
           chatId: SelectedChat._id,
           userId: user1._id,
@@ -170,11 +172,12 @@ const UpdateGroupChatModal = ({ fetchAgain, setfetchAgain }) => {
       setLoading(true);
       const config = {
         headers: {
-          Authorization: `Bearer ${User.token}`,
-        },
+					"Content-type": "application/json",
+				},
+        withCredentials: true,
       };
       const { data } = await axios.put(
-        `http://localhost:5000/chats/removefromgroup`,
+        `${API_URL}/chats/removefromgroup`,
         {
           chatId: SelectedChat._id,
           userId: user1._id,

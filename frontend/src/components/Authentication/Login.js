@@ -6,24 +6,25 @@ import { useState } from "react";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 import { useHistory } from "react-router-dom";
-import { ChatState } from "../../Context/ChatProvider";
+
+const API_URL = process.env.HTTP_SERVER_URL;
+const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL;
 
 const Login = () => {
   const [show, setShow] = useState(false);
   const handleClick = () => setShow(!show);
   const toast = useToast();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const history = useHistory();
-  const { setUser } = ChatState();
 
   const submitHandler = async () => {
     setLoading(true);
     if (!email || !password) {
       toast({
-        title: "Please Fill all the Feilds",
+        title: "Please Fill all the Fields",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -38,13 +39,17 @@ const Login = () => {
         headers: {
           "Content-type": "application/json",
         },
+        withCredentials: true,
       };
 
-      const { data } = await axios.post(
-        "http://localhost:5000/user/login",
+      // 1. First, call the login endpoint. This will set the HttpOnly cookies.
+      await axios.post(
+        `${AUTH_SERVER_URL}/auth/login`,
         { email, password },
         config
       );
+
+      const { data } = await axios.get(`${API_URL}/user/profil`, config);
 
       toast({
         title: "Login Successful",
@@ -53,13 +58,17 @@ const Login = () => {
         isClosable: true,
         position: "bottom",
       });
-      setUser(data);
+
+      // 3. Store the data from the SECOND request in localStorage
       localStorage.setItem("UserInfo", JSON.stringify(data));
+      
       setLoading(false);
       history.push("/chats");
+      
     } catch (error) {
       toast({
-        title: "Error Occured!",
+        title: "Error Occurred!",
+        description: error.response?.data?.message || "Invalid Credentials",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -71,7 +80,7 @@ const Login = () => {
 
   return (
     <VStack spacing="10px">
-      <FormControl id="email" isRequired>
+      <FormControl id="login-email" isRequired>
         <FormLabel>Email Address</FormLabel>
         <Input
           value={email}
@@ -80,7 +89,7 @@ const Login = () => {
           onChange={(e) => setEmail(e.target.value)}
         />
       </FormControl>
-      <FormControl id="password" isRequired>
+      <FormControl id="login-password" isRequired>
         <FormLabel>Password</FormLabel>
         <InputGroup size="md">
           <Input
