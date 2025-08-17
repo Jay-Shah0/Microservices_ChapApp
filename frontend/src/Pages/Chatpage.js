@@ -9,7 +9,7 @@ import { ChatState } from "../context/ChatProvider";
 
 
 const Chatpage = () => {
-	const [User, setUser] = ChatState();
+	const {User, setUser} = ChatState();
 
 	const history = useHistory();
 

@@ -164,8 +164,8 @@ const RemovefromGroup = expressAsyncHandler(async (req, res) => {
     { $pull: { users: userId } },
     { new: true }
   )
-    .populate("users", "-password")
-    .populate("groupAdmin", "-password");
+    .populate("users")
+    .populate("groupAdmin");
 
   if (!removed) {
     res.status(404);

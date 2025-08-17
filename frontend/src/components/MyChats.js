@@ -15,7 +15,7 @@ const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
 const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState();
 
-  const { SelectedChat, User, Chats, setChats } = ChatState();
+  const { SelectedChat, Chats, setChats } = ChatState();
 
   const toast = useToast();
 

@@ -1,12 +1,19 @@
 const asyncHandler = require("express-async-handler");
-const pool = require("../Config/pgDB");
+const {pool} = require("../Config/pgDB");
 
 const mapPostgresIdToMongoId = asyncHandler(async (req, res, next) => {
-  const postgresUserId = req.headers["x-user-id"];
+  const postgresUserIdHeader  = req.headers["x-user-id"];
 
-  if (!postgresUserId) {
+  if (!postgresUserIdHeader) {
     res.status(401);
     throw new Error("Not authorized, user ID not found in header.");
+  }
+
+const postgresUserId = parseInt(postgresUserIdHeader.split(",")[0].trim(), 10);
+
+  if (isNaN(postgresUserId)) {
+    res.status(400);
+    throw new Error("Invalid user ID in header.");
   }
 
   // Find the user in PostgreSQL to get their linked MongoDB ID

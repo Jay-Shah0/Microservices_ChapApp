@@ -37,6 +37,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// *** Start background serve loop for go-socket.io ***
+	go func() {
+		if err := srv.Serve(); err != nil {
+			log.Fatalf("socketio serve error: %v", err)
+		}
+	}()
+	defer srv.Close()
+
 	http.Handle("/socket.io/", srv)
 	log.Printf("ws-server listening on :%s", os.Getenv("PORT"))
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), nil))

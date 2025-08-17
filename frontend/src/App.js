@@ -15,7 +15,14 @@ function App() {
       <Route path="/verify" component={VerifyOtp} />
       <Route path="/register" component={CompleteProfile} />
       <ChatProvider>
-        <Route path="/chats" component={Chatpage} />
+        <Route
+        path="/chats"
+        render={() => (
+          <ChatProvider>
+            <Chatpage />
+          </ChatProvider>
+        )}
+      />
       </ChatProvider>
     </div>
   );

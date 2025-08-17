@@ -17,11 +17,13 @@ func initSocketServer(redisClient *redis.Client, kafkaProducer *kafka.Writer, to
 
 	srv.OnConnect("/", func(so socketio.Conn) error {
 		userID := so.RemoteHeader().Get("X-User-Id")
+		log.Println("Handshake headers:", so.RemoteHeader())
 
 		if userID == "" {
 			log.Println("Rejecting connection: Missing or empty X-User-Id header.")
 			return errors.New("unauthorized") 
 		}
+		log.Println("Handshake headers:", so.RemoteHeader())
 
 		so.SetContext(userID)
 		userSockets.Store(userID, so)
@@ -52,6 +54,10 @@ func initSocketServer(redisClient *redis.Client, kafkaProducer *kafka.Writer, to
 		userSockets.Delete(userID)
 		redisClient.HDel(context.Background(), "user:server", userID)
 		log.Printf("User %s disconnected", userID)
+	})
+
+	srv.OnError("/", func(so socketio.Conn, e error) {
+		log.Println("Socket error:", e)
 	})
 
 	for _, event := range []string{"new message", "typing", "stop typing"} {

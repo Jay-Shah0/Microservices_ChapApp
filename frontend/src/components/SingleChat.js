@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ChatState } from '../context/ChatProvider';
-import { socket } from '../socket';
 import {
   Box,
   FormControl,
@@ -23,7 +22,7 @@ import { useCallback } from 'react';
 const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
 
 const SingleChat = ({ fetchAgain, setfetchAgain }) => {
-  const { SelectedChat, setSelectedChat, User } = ChatState();
+  const { SelectedChat, setSelectedChat, User, socket } = ChatState();
 
   const [Messages, setMessages] = useState([]);
   const [loading, setloading] = useState(true);
@@ -105,7 +104,7 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
         },
       };
       const { data } = await axios.post(
-        '${API_URL}/message',
+        `${API_URL}/message`,
         { content: NewMessage, chatId: SelectedChat },
         config
       );
@@ -201,7 +200,13 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
           socket.off('typing', handleTyping);
           socket.off('stop typing', handleStopTyping);
       };
-  }, [SelectedChat]); // This effect re-runs whenever the selected chat changes
+  }, [SelectedChat]);
+
+  useEffect(() => {
+  if (SelectedChat) {
+    FetchMessages();
+  }
+}, [SelectedChat, FetchMessages]);
 
   return (
     <>

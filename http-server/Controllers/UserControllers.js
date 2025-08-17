@@ -1,7 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../Model/UserModel");
 const expressAsyncHandler = require("express-async-handler");
-const pool = require("../Config/pgDB");
+const { pool } = require("../Config/pgDB");
+
 
 const registerUserProfile = asyncHandler(async (req, res) => {
   // This function remains unchanged as it creates the user.
@@ -12,19 +13,25 @@ const registerUserProfile = asyncHandler(async (req, res) => {
     throw new Error("Please provide name and email");
   }
 
-  const user = await User.create({
+  const userObject = {
     name,
     email,
-    pic,
-  });
+  };
+
+  if (pic) {
+    userObject.pic = pic;
+  }
+
+  const user = await User.create(userObject);
   if (user) {
-    const mongoId = user._id;
+    const mongoId = user._id.toString();
 
     const updateQuery = `
       UPDATE users 
       SET moongo_id = $1 
       WHERE email = $2;
     `;
+
     await pool.query(updateQuery, [mongoId, email]);
 
     res.status(201).json({

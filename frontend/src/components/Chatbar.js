@@ -1,11 +1,10 @@
 import { Box, Text } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatState } from "../context/ChatProvider";
-import { socket } from "../socket";
 import { getSender } from "../config/ChatLogics";
 
 const Chatbar = ({ loggedUser, chat }) => {
-	const { SelectedChat, setSelectedChat } = ChatState();
+	const { SelectedChat, setSelectedChat,socket } = ChatState();
 	const [newMessageCounts, setNewMessageCounts] = useState(0);
 	const [latestMessage, setLatestMessage] = useState(chat.latestMessage);
 	const [isTyping, setIsTyping] = useState(false);
