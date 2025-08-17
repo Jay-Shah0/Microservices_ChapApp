@@ -1,0 +1,22 @@
+# Environment variables file
+# These contain secrets and should be passed at runtime
+.env
+.env.*
+!/.env.example
+
+# Go build output and dependencies
+# The binary is built inside the container
+ws-server
+vendor/
+
+# Version control directory
+.git
+.gitignore
+
+# IDE and editor configuration
+.vscode/
+.idea/
+
+# Operating system specific files
+.DS_Store
+Thumbs.db

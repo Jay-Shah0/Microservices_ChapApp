@@ -15,11 +15,11 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useState } from "react";
-import { ChatState } from "../../Context/ChatProvider";
+import { ChatState } from "../../context/ChatProvider";
 import UserBadgeItem from "../userAvatar/UserBadgeItem";
 import UserListItem from "../userAvatar/UserListItem";
 
-const API_URL = process.env.HTTP_SERVER_URL
+const API_URL = process.env.REACT_APP_HTTP_SERVER_URL
 
 const GroupChatModal = ({ children }) => {
 	const { User, Chats, setChats } = ChatState();

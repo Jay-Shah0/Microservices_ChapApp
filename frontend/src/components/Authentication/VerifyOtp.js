@@ -9,7 +9,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router";
 
-const AUTH_URL = process.env.AUTH_SERVER_URL;
+const AUTH_URL = process.env.REACT_APP_AUTH_SERVER_URL;
 
 const VerifyOtp = () => {
   const toast = useToast();

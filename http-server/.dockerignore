@@ -1,0 +1,32 @@
+# Dependency directory
+# This should be installed fresh inside the container
+node_modules
+
+# Environment variables file
+# Secrets should be passed at runtime, not built into the image
+.env
+.env.*
+!/.env.example
+
+# Log files and temporary data
+npm-debug.log*
+*.log
+logs
+*.pid
+*.seed
+*.gz
+
+# Local development and testing files
+nodemon.json
+.vscode/
+*.test.js
+test/
+coverage/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Version control directory
+.git
+.gitignore

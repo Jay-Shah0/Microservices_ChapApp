@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ChatState } from '../Context/ChatProvider';
+import { ChatState } from '../context/ChatProvider';
 import { socket } from '../socket';
 import {
   Box,
@@ -20,7 +20,7 @@ import ScrollableChat from './MessagesScroll';
 import axios from 'axios';
 import { useCallback } from 'react';
 
-const API_URL = process.env.HTTP_SERVER_URL;
+const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
 
 const SingleChat = ({ fetchAgain, setfetchAgain }) => {
   const { SelectedChat, setSelectedChat, User } = ChatState();
@@ -32,8 +32,6 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
   const [Typing, setTyping] = useState(false);
   const [Istyping, setIstyping] = useState(false);
   const toast = useToast();
-  const [PreviousChatId, setPreviousChatId] = useState("");
-
   const isMobile = useBreakpointValue({ base: true, md: false });
   const textareaRef = useRef(null);
 
@@ -149,7 +147,7 @@ const SingleChat = ({ fetchAgain, setfetchAgain }) => {
     setTyping(true);
     const recipients = SelectedChat.users
       .map(u => u._id)
-      .filter(id => id !== currentUserId);
+      .filter(id => id !== User._id);
 
     socket.emit('typing', {data: { chatId: SelectedChat._id },recipients});
     const lastTypingTime = new Date().getTime();

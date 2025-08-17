@@ -27,10 +27,10 @@ import ChatLoading from "../ChatLoading";
 import { Spinner } from "@chakra-ui/spinner";
 import ProfileModal from "./ProfileModal";
 import UserListItem from "../userAvatar/UserListItem";
-import { ChatState } from "../../Context/ChatProvider";
+import { ChatState } from "../../context/ChatProvider";
 
-const API_URL = process.env.HTTP_SERVER_URL;
-const AUTH_URL = process.env.AUTH_SERVER_URL;
+const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
+const AUTH_URL = process.env.REACT_APP_AUTH_SERVER_URL;
 
 function SideDrawer() {
   const [search, setSearch] = useState("");

@@ -5,7 +5,7 @@ const { Pool } = require("pg");
 dotenv.config();
 
 const pool = new Pool({
-  connectionString: process.env.Postgres_URI,
+  connectionString: process.env.POSTGRES_URI,
   ssl: {
     rejectUnauthorized: false,
   },

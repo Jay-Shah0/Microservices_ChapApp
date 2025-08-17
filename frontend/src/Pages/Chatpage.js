@@ -5,7 +5,7 @@ import SideDrawer from "../components/miscellaneous/SideDrawer";
 import ChatBox from "../components/ChatBox";
 
 import { useHistory } from "react-router-dom";
-import { ChatState } from "../Context/ChatProvider";
+import { ChatState } from "../context/ChatProvider";
 
 
 const Chatpage = () => {

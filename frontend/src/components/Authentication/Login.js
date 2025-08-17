@@ -7,8 +7,8 @@ import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 import { useHistory } from "react-router-dom";
 
-const API_URL = process.env.HTTP_SERVER_URL;
-const AUTH_URL = process.env.AUTH_SERVER_URL;
+const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
+const AUTH_URL = process.env.REACT_APP_AUTH_SERVER_URL;
 
 const Login = () => {
   const [show, setShow] = useState(false);

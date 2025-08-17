@@ -9,7 +9,7 @@ import axios from "axios";
 import { useState } from "react";
 import { useHistory } from "react-router";
 
-const AUTH_URL = process.env.AUTH_SERVER_URL;
+const AUTH_URL = process.env.REACT_APP_AUTH_SERVER_URL;
 
 const Signup = () => {
   const [show, setShow] = useState(false);

@@ -3,6 +3,7 @@ import Homepage from "./Pages/Homepage";
 import { Route } from "react-router-dom";
 import Chatpage from "./Pages/Chatpage";
 import VerifyOtp from "./components/Authentication/VerifyOtp";
+import ChatProvider from "./context/ChatProvider";
 import CompleteProfile from "./components/Authentication/CompleteProfile";
 
 

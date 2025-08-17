@@ -9,13 +9,13 @@ import {
   ModalCloseButton,
 } from '@chakra-ui/react'
 import { useState } from "react";
-import { ChatState } from "../../Context/ChatProvider";
+import { ChatState } from "../../context/ChatProvider";
 import axios from "axios";
 import UserBadgeItem from "../userAvatar/UserBadgeItemInGroup";
 import UserListItem from "../userAvatar/UserListItem";
 import { SettingsIcon } from "@chakra-ui/icons";
 
-const API_URL = process.env.HTTP_SERVER_URL;
+const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
 
 
 const UpdateGroupChatModal = ({ fetchAgain, setfetchAgain }) => {

@@ -11,8 +11,7 @@
   "keywords": [
     "chat-app"
   ],
-  "author": "Piyush Agarwal",
-  "license": "ISC",
+  "author": "Jay Shah",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "colors": "^1.4.0",

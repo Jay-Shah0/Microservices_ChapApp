@@ -12,13 +12,15 @@ const http = require('http');
 const app = express();
 const server = http.createServer(app);
 
+dotenv.config();
+
+const Client_URL = process.env.Client_URL || "http://localhost:5173";
+
 app.use(cors({
-  origin: '*',
+  origin: Client_URL,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 }));
-
-dotenv.config();
 
 checkDbConnection();
 connectDB();

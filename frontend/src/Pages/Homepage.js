@@ -14,8 +14,8 @@ import axios from "axios";
 import Login from "../components/Authentication/Login";
 import Signup from "../components/Authentication/Signup";
 
-const API_URL = process.env.HTTP_SERVER_URL;
-const AUTH_URL = process.env.AUTH_SERVER_URL;
+const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
+const AUTH_URL = process.env.REACT_APP_AUTH_SERVER_URL;
 
 
 function Homepage() {

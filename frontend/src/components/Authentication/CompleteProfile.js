@@ -9,7 +9,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router";
 
-const API_URL = process.env.HTTP_SERVER_URL;
+const API_URL = process.env.REACT_APP_HTTP_SERVER_URL;
 
 const CompleteProfile = () => {
   const toast = useToast();
